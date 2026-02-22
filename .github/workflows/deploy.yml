@@ -1,4 +1,4 @@
-name: Deploy to AWS S3
+name: CI Pipeline
 
 on:
   push:
@@ -6,31 +6,22 @@ on:
       - main
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # AWS CLI is already installed on ubuntu-latest
-      # No need to manually install it
-
-      - name: Deploy to S3
+      - name: Build Step
         run: |
-          aws s3 sync . s3://${{ secrets.S3_BUCKET }} \
-            --exclude ".git/*" \
-            --exclude ".github/*" \
-            --delete
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          echo "Building project..."
+          echo "Build successful!"
 
       - name: Slack Notification
         if: always()
         run: |
           STATUS="${{ job.status }}"
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\"🚀 AWS Deployment Status: ${STATUS}\"}" \
+          --data "{\"text\":\"CI Pipeline Status: ${STATUS}\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
