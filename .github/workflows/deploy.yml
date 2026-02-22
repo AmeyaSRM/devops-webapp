@@ -10,17 +10,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install awscli -y
+      # AWS CLI is already installed on ubuntu-latest
+      # No need to manually install it
 
       - name: Deploy to S3
         run: |
-          aws s3 sync . s3://${{ secrets.S3_BUCKET }} --delete
+          aws s3 sync . s3://${{ secrets.S3_BUCKET }} \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --delete
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -29,6 +30,7 @@ jobs:
       - name: Slack Notification
         if: always()
         run: |
+          STATUS="${{ job.status }}"
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\"Deployment Status: ${{ job.status }}\"}" \
+          --data "{\"text\":\"🚀 AWS Deployment Status: ${STATUS}\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
